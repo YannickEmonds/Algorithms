@@ -22,9 +22,41 @@ def naive_levenshtein(a: str, b: str):
         return 1 + minimum
 
 
+def iterative_levenshtein(a: str, b: str):
+    """Use the Wagner-Fischer algorithm to determine the Levenshtein distance more efficiently."""
+    len_a = len(a)
+    len_b = len(b)
+    distance_matrix = (len_a + 1) * (len_b + 1) * [0]
+    width = len_a + 1
+    for i in range(len(distance_matrix)):
+        row = i // width
+        col = i % width
+        if row == 0:
+            distance_matrix[i] = col
+            continue
+        if col == 0:
+            distance_matrix[i] = row
+            continue
+
+        # delete character from string a
+        deletion = distance_matrix[row * width + (col-1)] + 1
+        # insert character into string a
+        insertion = distance_matrix[(row-1) * width + col] + 1
+
+        # substitute characters
+        cost = 0 if a[col-1] == b[row-1] else 1
+        substitution = distance_matrix[(row-1) * width + (col-1)] + cost
+        distance_matrix[i] = min((deletion, insertion, substitution))
+
+    return distance_matrix[-1]
+
+
 if __name__ == '__main__':
     args = process_args()
     str1, str2 = args.strings
 
     levenshtein_distance = naive_levenshtein(str1, str2)
-    print(f"lev({str1}, {str2}) = {levenshtein_distance}")
+    print(f"recursive: lev({str1}, {str2}) = {levenshtein_distance}")
+
+    iterative_levenshtein_distance = iterative_levenshtein(str1, str2)
+    print(f"iterative: lev({str1}, {str2}) = {iterative_levenshtein_distance}")
