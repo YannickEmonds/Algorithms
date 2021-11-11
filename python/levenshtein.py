@@ -1,4 +1,5 @@
 import argparse
+import timeit
 
 
 def process_args():
@@ -60,3 +61,13 @@ if __name__ == '__main__':
 
     iterative_levenshtein_distance = iterative_levenshtein(str1, str2)
     print(f"iterative: lev({str1}, {str2}) = {iterative_levenshtein_distance}")
+
+    n_reps = 100
+    t_naive = timeit.timeit('naive_levenshtein("conundrum", "shenanigan")',
+                            setup="from __main__ import naive_levenshtein",
+                            number=n_reps)
+    t_iterative = timeit.timeit('iterative_levenshtein("conundrum", "shenanigan")',
+                                setup="from __main__ import iterative_levenshtein",
+                                number=n_reps)
+    print(f"recursive: {t_naive/n_reps}")
+    print(f"iterative: {t_iterative/n_reps}")
