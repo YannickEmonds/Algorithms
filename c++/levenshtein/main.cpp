@@ -52,10 +52,50 @@ uint16_t iterative_levenshtein(const std::string a, const std::string b)
 }
 
 
+// To be tested
+uint16_t iterative_levenshtein_omp(const std::string a, const std::string b)
+{
+    const std::size_t n_rows {b.size() + 1};
+    const std::size_t n_cols {a.size() + 1};
+    std::vector<uint16_t> distance_matrix(n_rows * n_cols);
+    std::vector<uint16_t> temp_min(n_cols-1);
+
+    for (std::size_t i=0; i<n_rows; ++i)
+        distance_matrix[i * n_cols] = i;
+
+    for (std::size_t i=0; i<n_cols; ++i)
+        distance_matrix[i] = i;
+
+    for (std::size_t j=1; j<n_rows; ++j)
+    {
+#pragma omp parallel for
+        for (std::size_t i=1; i<n_cols; ++i)
+        {
+            uint16_t substitution_cost = 1;
+            if (a[i-1] == b[j-1])
+                substitution_cost = 0;
+
+            temp_min[i-1] = std::min(distance_matrix[(j-1)*n_cols + i] + 1,
+                                     distance_matrix[(j-1)*n_cols + (i-1)] + substitution_cost);
+        }
+
+        for (std::size_t i=1; i<n_cols; ++i)
+        {
+            const uint16_t deletion {static_cast<uint16_t>(distance_matrix[j*n_cols + (i-1)] + 1)};
+            const uint16_t min = std::min(deletion, temp_min[i-1]);
+            distance_matrix[j*n_cols + i] = min;
+        }
+    }
+
+    return distance_matrix[n_rows * n_cols - 1];
+}
+
+
 int main(int argc, char** argv)
 {
 
     std::cout << recursive_levenshtein(std::string("flaw"), std::string("lawn")) << '\n';
     std::cout << iterative_levenshtein(std::string("kitten"), std::string("sitting")) << '\n';
+    std::cout << iterative_levenshtein_omp(std::string("kitten"), std::string("sitting")) << '\n';
     return 0;
 }
